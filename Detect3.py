@@ -53,7 +53,7 @@ def absorption(xi,yi,phi,X,Y,t_muon , lambd=50 , eps =0.2 , R = 25*1e-2 ,n= 1.35
     """on determine le temps que met le photon a arriver sur les capteurs
     de sa trajectoire"""
     v= 3*1e8 / n
-    t_abs_temp = (d[cond] / v) + t_muon
+    t_abs_temp = (S[cond] / v) + t_muon
     
 
     """ Il faut maintenant voir si le capteur à effectivement absorbe le photon

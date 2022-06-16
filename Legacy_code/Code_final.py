@@ -14,40 +14,9 @@ import numpy as np
 import datetime
 import bruit as br
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import sys
 
-
-"""
-Ce code enregistre Un gif dans le répertoire fig/gif représentant l'evolution
-des detections des capteurs. Il enregistre également une image qui compare
-les absoptions finale des capteurs avec et sans bruit.
-
-Ce code à pour but de renvoyer 2 variable : Absorbe et Temps_Abs 
-qui représente respectivement : le nombre de muon absorbé par chaque capteur
-et le temps d'arrivé de chacun de ces photons
-
-Ces données sont accessible avec la synthaxe suivante : 
-    Absorbe[NuméroDuDétecteurEnX][NuméroDuDétecteurEnY]
-    Temps_Abs[NuméroDuDétecteurEnX][NuméroDuDétecteurEnY]
-    
-Si on veut utiliser le code pour une méthode de monte carlo par exemple
-il faudrait desactiver les figures et juste save ces deux tableaux.
-
-
-
-"""
-
-
-
-incr = 0
-
-plt.rc('axes', titlesize=20) #fontsize of the title
-plt.rc('axes', labelsize=20) #fontsize of the x and y labels
-plt.rc('xtick', labelsize=20) #fontsize of the x tick labels
-plt.rc('ytick', labelsize=20) #fontsize of the y tick labels
-plt.rc('legend', fontsize=20) #fontsize of the legend
-plt.rc('font', size=20) #controls default text size
-        
-
+name = int(sys.argv[1])
 """ On definis notre tableau de capteur de taille 420m * 240m """
 Nx = 21
 dx = 20
@@ -55,14 +24,19 @@ h0x = 0
 Ny = 20
 dy = 10
 h0y =40
-
-
+#
+#Nx = 200
+#dx = 20
+#h0x = 0
+#Ny = 200
+#dy = 10
+#h0y =40
 
 capteurs = capt.def_capteurs(Nx,dx,h0x,Ny,dy,h0y)
 pos_capx = capteurs[0]
 pos_capy = capteurs[1]
             
-""" affiche la position des capteurs"""
+
 #plt.figure()
 #plt.plot(capteurs[0],capteurs[1] ,'bx')
 
@@ -86,24 +60,24 @@ pos = [xmuon,ymuon]
 
 vmuon = 3*1e8
 theta = np.random.uniform(low=0,high=2*np.pi) #angle par rapport a x
-
 # theta=np.pi/2
 """ on definis le pas de temps et la duree de temps d'etude de sorte qu'a chaque
 pas de temps le muon parcoure 2 m et qu'a la fin du temps d'etude il soit eloigne
 d'au moins 300 m du detecteur donc qu'il ai parcouru grossièrement 1000m """
+
+#dt = 50/vmuon 
+#Tfin = 50/vmuon
 
 dt = 1/vmuon
 Tfin = 1000/vmuon
 T = np.arange(0,Tfin,dt)
 
 begin_time = datetime.datetime.now()
-
 """maintenant on fais boucler notr'Non valide'e code pour un pas de temps dt"""
 compteur = 0 #compteur d'iteration ou rien ne se passe
-
 for i in range(0,len(T)) :
     
-    """ on actualise la positon du muon et on calcule sa distance parcouru"""
+    """ on actualise la positon du muon et on calcule sa distaénce parcouru"""
     posf , dist = mu.muon(pos[0],pos[1],vmuon, dt ,theta)
     """ on caracterise le nombre de photon emis et leurs position"""
     
@@ -137,33 +111,17 @@ for i in range(0,len(T)) :
         break
         
     """ plot dynamique"""
-
-    if i % 10 == 0 :
-        incr += 1
-        plt.figure(figsize=(15,10))
-        plt.imshow(np.flip(Absorbe,0))
-        plt.title("pos x {0:.3f} m"
-                  "\n"
-                  "y .{1:3f} m "
-                  "\n"
-                  " temps :{2:.3f}*1e-7 s".format(posf[0],posf[1],T[i]*1e7))
-        plt.xticks(ticks = np.arange(0,Nx,1) ,labels=pos_capx[0,:].astype(int) , rotation = 50)
-        plt.yticks(ticks = np.arange(0,Ny,1) ,labels=np.flip(pos_capy[:,0]))
-        plt.xlabel("posx_capteur en mètre")
-        plt.ylabel("posy_capteur en mètre")
-        cax = plt.axes([0.8, 0.13, 0.03, 0.74])
-        cbar = plt.colorbar(cax=cax)
-        cbar.set_label("N photons absorbé")
-        plt.show()
-        plt.close()
+    # if i % 10 == 0 :
+    #     print(i)
+    #     plt.figure(figsize=(10,10))
+    #     plt.imshow(np.flip(Absorbe,0))
+    #     plt.title("pos x {}m y {}m temps :{}".format(posf[0],posf[1],T[i]))
+    #     plt.show()
 #fini
         
 """ on a donc Absorbe le tableau du nombre de photon Absorbe par chaque detecteur
 et Temps_Abs la nested list du temps auquel est Absorbe les photons sur chaque detecteur""" 
-
-
 if br.filtre(Absorbe) == 1 :
-    
 #    np.save("tab_abs",Absorbe)
 #    np.save("temps_final",T[i])
 #    
@@ -171,48 +129,33 @@ if br.filtre(Absorbe) == 1 :
     Absorbe_bruit = Absorbe + a
     
     print(Absorbe)
-    
-    fig = plt.figure(figsize=(30, 10))
-    plt.rc('axes', titlesize=30) #fontsize of the title
-    
+    fig = plt.figure(figsize=(20, 20))
     ax1 = fig.add_subplot(121)
     im1 = ax1.imshow(np.flip(Absorbe,0), interpolation='None')
 #    im1 = ax1.imshow(np.log(np.flip(Absorbe,0)), interpolation='None')
-    ax1.set_xlabel("posx_capteur en mètre")
-    ax1.set_ylabel("posy_capteur en mètre")
+    ax1.set_xlabel('capteur en x')
+    ax1.set_ylabel('capteur en y')
     ax1.set_title("Trace du muon dans le detecteur sans bruit")
-    ax1.set_xticks(ticks = np.arange(0,Nx,1))
-    ax1.set_xticklabels(pos_capx[0,:].astype(int))
-    ax1.set_yticks(ticks = np.arange(0,Ny,1))
-    ax1.set_yticklabels(np.flip(pos_capy[:,0]))
     
 
     divider = make_axes_locatable(ax1)
     cax = divider.append_axes('right', size='5%', pad=0.05)
-    fig.colorbar(im1, cax=cax, orientation='vertical' , label = "N photons absorbé")
+    fig.colorbar(im1, cax=cax, orientation='vertical')
 
     ax2 = fig.add_subplot(122)
     im2 = ax2.imshow(np.flip(Absorbe_bruit,0), interpolation='None')
 #    im2 = ax2.imshow(np.log(np.flip(Absorbe_bruit,0)), interpolation='None')
-    ax2.set_xlabel("posx_capteur en mètre")
-    ax2.set_ylabel("posy_capteur en mètre")
+    ax2.set_xlabel('capteur en x')
+    ax2.set_ylabel('capteur en y')
     ax2.set_title("Trace du muon dans le detecteur avec bruit")
-    ax2.set_xticks(ticks = np.arange(0,Nx,1))
-    ax2.set_xticklabels(pos_capx[0,:].astype(int))
-    ax2.set_yticks(ticks = np.arange(0,Ny,1))
-    ax2.set_yticklabels(np.flip(pos_capy[:,0]))
     
     divider = make_axes_locatable(ax2)
     cax = divider.append_axes('right', size='5%', pad=0.05)
-    fig.colorbar(im2, cax=cax, orientation='vertical' , label = "N photons absorbé");
-
+    fig.colorbar(im2, cax=cax, orientation='vertical');
     
-    print("valide")
+    fig.savefig('/mnt/c/projetf/projet_6_f/fig/bam{}'.format(name))
 else :
     print("Pas valide")
-    # if datetime.datetime.now() - begin_time < 15: 
-    # shutil.rmtree("/mnt/c/projetf/projet_6_f/fig/fig")
-
 #    a=br.bruit(T[i],Absorbe)
 #    Absorbe_bruit = Absorbe + a
 

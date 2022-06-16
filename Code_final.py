@@ -14,7 +14,11 @@ import numpy as np
 import datetime
 import bruit as br
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+import os
+import glob
+from PIL import Image, ImageDraw
+import sys
+import shutil
 
 """
 Ce code enregistre Un gif dans le répertoire fig/gif représentant l'evolution
@@ -35,10 +39,13 @@ il faudrait desactiver les figures et juste save ces deux tableaux.
 
 
 """
+name = int(sys.argv[1])
 
-
-
+os.makedirs("/mnt/c/projetf/projet_6_f/fig/fig{}".format(name))
 incr = 0
+
+
+
 
 plt.rc('axes', titlesize=20) #fontsize of the title
 plt.rc('axes', labelsize=20) #fontsize of the x and y labels
@@ -154,7 +161,7 @@ for i in range(0,len(T)) :
         cax = plt.axes([0.8, 0.13, 0.03, 0.74])
         cbar = plt.colorbar(cax=cax)
         cbar.set_label("N photons absorbé")
-        plt.show()
+        plt.savefig('/mnt/c/projetf/projet_6_f/fig/fig{}/im{}'.format(name,incr))
         plt.close()
 #fini
         
@@ -164,6 +171,22 @@ et Temps_Abs la nested list du temps auquel est Absorbe les photons sur chaque d
 
 if br.filtre(Absorbe) == 1 :
     
+    
+    """ GIF """
+
+    file = glob.glob("/mnt/c/projetf/projet_6_f/fig/fig{}/*.png".format(name))
+    images = []
+    for a in range(1,len(file)+1) :
+        im = Image.open('/mnt/c/projetf/projet_6_f/fig/fig{}/im{}.png'.format(name,a))
+        draw = ImageDraw.Draw(im)
+        images.append(im)
+      
+    images[0].save('/mnt/c/projetf/projet_6_f/fig/gif/tracé{}.gif'.format(name),
+                   save_all = True, append_images = images[1:], 
+                   optimize = True, duration = 15,
+                   repeat = False)
+
+
 #    np.save("tab_abs",Absorbe)
 #    np.save("temps_final",T[i])
 #    
@@ -181,10 +204,8 @@ if br.filtre(Absorbe) == 1 :
     ax1.set_xlabel("posx_capteur en mètre")
     ax1.set_ylabel("posy_capteur en mètre")
     ax1.set_title("Trace du muon dans le detecteur sans bruit")
-    ax1.set_xticks(ticks = np.arange(0,Nx,1))
-    ax1.set_xticklabels(pos_capx[0,:].astype(int))
-    ax1.set_yticks(ticks = np.arange(0,Ny,1))
-    ax1.set_yticklabels(np.flip(pos_capy[:,0]))
+    ax1.set_xticks(ticks = np.arange(0,Nx,1) ,labels=pos_capx[0,:].astype(int) , rotation = 50)
+    ax1.set_yticks(ticks = np.arange(0,Ny,1) ,labels=np.flip(pos_capy[:,0]))
     
 
     divider = make_axes_locatable(ax1)
@@ -197,21 +218,22 @@ if br.filtre(Absorbe) == 1 :
     ax2.set_xlabel("posx_capteur en mètre")
     ax2.set_ylabel("posy_capteur en mètre")
     ax2.set_title("Trace du muon dans le detecteur avec bruit")
-    ax2.set_xticks(ticks = np.arange(0,Nx,1))
-    ax2.set_xticklabels(pos_capx[0,:].astype(int))
-    ax2.set_yticks(ticks = np.arange(0,Ny,1))
-    ax2.set_yticklabels(np.flip(pos_capy[:,0]))
+    ax2.set_xticks(ticks = np.arange(0,Nx,1) ,labels=pos_capx[0,:].astype(int) , rotation = 50)
+    ax2.set_yticks(ticks = np.arange(0,Ny,1) ,labels=np.flip(pos_capy[:,0]))
     
     divider = make_axes_locatable(ax2)
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im2, cax=cax, orientation='vertical' , label = "N photons absorbé");
-
+    
+    fig.savefig('/mnt/c/projetf/projet_6_f/fig/Trace_muon{}'.format(name))
+    
+    shutil.rmtree("/mnt/c/projetf/projet_6_f/fig/fig{}".format(name))
     
     print("valide")
 else :
     print("Pas valide")
     # if datetime.datetime.now() - begin_time < 15: 
-    # shutil.rmtree("/mnt/c/projetf/projet_6_f/fig/fig")
+    shutil.rmtree("/mnt/c/projetf/projet_6_f/fig/fig{}".format(name))
 
 #    a=br.bruit(T[i],Absorbe)
 #    Absorbe_bruit = Absorbe + a
